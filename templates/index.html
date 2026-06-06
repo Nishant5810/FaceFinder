@@ -1,0 +1,691 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Find Face Match</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #f5f5f5;
+        color: #333;
+      }
+
+      /* Header */
+      .header {
+        background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+        color: white;
+        padding: 30px 20px;
+        text-align: center;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+
+      .header h1 {
+        font-size: 32px;
+        margin-bottom: 5px;
+      }
+
+      .header p {
+        font-size: 14px;
+        opacity: 0.9;
+      }
+
+      /* Main container */
+      .container {
+        max-width: 1200px;
+        margin: 30px auto;
+        padding: 0 20px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 30px;
+      }
+
+      /* Panels */
+      .panel {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+        padding: 30px;
+      }
+
+      .panel h2 {
+        color: #2c3e50;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        font-size: 20px;
+      }
+
+      .panel h2::before {
+        content: "";
+        display: inline-block;
+        width: 4px;
+        height: 24px;
+        background: #3498db;
+        margin-right: 10px;
+        border-radius: 2px;
+      }
+
+      /* Upload panel */
+      .upload-area {
+        border: 2px dashed #3498db;
+        border-radius: 8px;
+        padding: 40px;
+        text-align: center;
+        background: #f8f9fa;
+        cursor: pointer;
+        transition: all 0.3s;
+        margin-bottom: 20px;
+        min-height: 200px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .upload-area:hover {
+        border-color: #2980b9;
+        background: #ecf0f1;
+      }
+
+      .upload-area.dragover {
+        background: #e3f2fd;
+        border-color: #1976d2;
+      }
+
+      .upload-area input[type="file"] {
+        display: none;
+      }
+
+      .upload-icon {
+        font-size: 40px;
+        margin-bottom: 15px;
+      }
+
+      .upload-text {
+        color: #7f8c8d;
+        font-size: 14px;
+        margin-bottom: 10px;
+      }
+
+      .upload-text strong {
+        color: #2c3e50;
+        display: block;
+        font-size: 16px;
+        margin-bottom: 5px;
+      }
+
+      #filename {
+        color: #27ae60;
+        font-weight: bold;
+        margin-top: 10px;
+        font-size: 13px;
+      }
+
+      /* Gender display */
+      .gender-display {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 6px;
+        margin-bottom: 20px;
+        text-align: center;
+        font-weight: bold;
+        color: #2c3e50;
+      }
+
+      /* Buttons */
+      .button-group {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+      }
+
+      button {
+        flex: 1;
+        padding: 12px 20px;
+        border: none;
+        border-radius: 6px;
+        font-size: 14px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s;
+      }
+
+      .btn-select {
+        background: #3498db;
+        color: white;
+      }
+
+      .btn-select:hover {
+        background: #2980b9;
+      }
+
+      .btn-analyze {
+        background: #27ae60;
+        color: white;
+      }
+
+      .btn-analyze:hover {
+        background: #229954;
+      }
+
+      .btn-analyze:disabled {
+        background: #bdc3c7;
+        cursor: not-allowed;
+      }
+
+      /* Results table */
+      .results-container {
+        overflow: visible;
+      }
+
+      /* Match Result Card */
+      .match-result-card {
+        display: block;
+        width: 100%;
+      }
+
+      .match-result-card.hidden {
+        display: none !important;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 20px;
+      }
+
+      th {
+        background: #2c3e50;
+        color: white;
+        padding: 12px;
+        text-align: left;
+        font-size: 13px;
+        font-weight: bold;
+      }
+
+      td {
+        padding: 12px;
+        border-bottom: 1px solid #ecf0f1;
+      }
+
+      tr:hover {
+        background: #f8f9fa;
+      }
+
+      .match-badge {
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: bold;
+      }
+
+      .match-badge.yes {
+        background: #d4edda;
+        color: #155724;
+      }
+
+      .match-badge.warn {
+        background: #fff3cd;
+        color: #856404;
+      }
+
+      .match-badge.no {
+        background: #f8d7da;
+        color: #721c24;
+      }
+
+      /* Summary box */
+      .summary {
+        background: #e3f2fd;
+        border-left: 4px solid #3498db;
+        padding: 20px;
+        border-radius: 6px;
+        margin-top: 20px;
+      }
+
+      .summary h3 {
+        color: #1565c0;
+        margin-bottom: 10px;
+        font-size: 14px;
+      }
+
+      .summary p {
+        color: #424242;
+        font-size: 13px;
+        margin-bottom: 8px;
+        line-height: 1.6;
+      }
+
+      /* Status messages */
+      .message {
+        padding: 15px;
+        border-radius: 6px;
+        margin-bottom: 15px;
+        display: none;
+      }
+
+      .message.success {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+        display: block;
+      }
+
+      .message.error {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+        display: block;
+      }
+
+      .message.loading {
+        background: #cce5ff;
+        color: #004085;
+        border: 1px solid #b8daff;
+        display: block;
+      }
+
+      .message.warning {
+        background: #fff3cd;
+        color: #856404;
+        border: 1px solid #ffeaa7;
+        display: block;
+      }
+
+      /* Loading spinner */
+      .spinner {
+        display: inline-block;
+        width: 14px;
+        height: 14px;
+        border: 2px solid #ccc;
+        border-top-color: #333;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+        margin-right: 8px;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      /* Footer */
+      .footer {
+        background: #2c3e50;
+        color: white;
+        text-align: center;
+        padding: 20px;
+        margin-top: 40px;
+        font-size: 13px;
+      }
+
+      /* Responsive */
+      @media (max-width: 768px) {
+        .container {
+          grid-template-columns: 1fr;
+        }
+
+        .header h1 {
+          font-size: 24px;
+        }
+      }
+
+      /* Hide content initially */
+      .hidden {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Header -->
+    <div class="header">
+      <h1>🔍 Find Face Match</h1>
+      <p>Advanced Facial Recognition & Intelligent Profile Matching</p>
+    </div>
+
+    <!-- Main Container -->
+    <div class="container">
+      <!-- Left Panel: Upload -->
+      <div class="panel">
+        <h2>Upload Image</h2>
+
+        <div class="upload-area" id="uploadArea">
+          <div class="upload-icon">📸</div>
+          <div class="upload-text">
+            <strong>Click to select or drag image</strong>
+            <span>JPG, JPEG, PNG, BMP • Max 16MB</span>
+          </div>
+          <input type="file" id="fileInput" accept="image/*" />
+          <div id="filename"></div>
+        </div>
+
+        <div class="button-group">
+          <button
+            class="btn-select"
+            onclick="document.getElementById('fileInput').click()"
+          >
+            📁 Select Image
+          </button>
+          <button class="btn-analyze" id="analyzeBtn" onclick="analyzeImage()">
+            ⚡ Analyze
+          </button>
+        </div>
+
+        <div id="message" class="message"></div>
+      </div>
+
+      <!-- Right Panel: Results -->
+      <div class="panel">
+        <h2>Match Result</h2>
+
+        <div id="resultArea" class="results-container">
+          <p
+            id="noResults"
+            style="text-align: center; color: #7f8c8d; padding: 20px"
+          >
+            Upload and analyze an image to see results.
+          </p>
+
+          <!-- Results container for single or multiple matches -->
+          <div id="matchCard" class="match-result-card hidden">
+            <!-- Will be populated dynamically with match cards -->
+            <div id="matchesContainer"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <p>
+        OK Find Face Match v1.0 | Web Application | Built with Flask & Python
+      </p>
+    </div>
+
+    <script>
+      const uploadArea = document.getElementById("uploadArea");
+      const fileInput = document.getElementById("fileInput");
+      const filenameDisplay = document.getElementById("filename");
+      const messageDiv = document.getElementById("message");
+      const analyzeBtn = document.getElementById("analyzeBtn");
+      const matchCard = document.getElementById("matchCard");
+      const matchesContainer = document.getElementById("matchesContainer");
+      const noResults = document.getElementById("noResults");
+
+      let selectedFile = null;
+
+      // Drag and drop
+      uploadArea.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        uploadArea.classList.add("dragover");
+      });
+
+      uploadArea.addEventListener("dragleave", () => {
+        uploadArea.classList.remove("dragover");
+      });
+
+      uploadArea.addEventListener("drop", (e) => {
+        e.preventDefault();
+        uploadArea.classList.remove("dragover");
+        handleFiles(e.dataTransfer.files);
+      });
+
+      uploadArea.addEventListener("click", () => {
+        fileInput.click();
+      });
+
+      fileInput.addEventListener("change", (e) => {
+        handleFiles(e.target.files);
+      });
+
+      function handleProfileClick(event, profileLink, memberName) {
+        // Validate profile link
+        if (!profileLink || profileLink.trim() === "") {
+          console.error("[ERROR] Invalid profile link for", memberName);
+          event.preventDefault();
+          alert("Profile link is not available. Please try again.");
+          return false;
+        }
+        console.log("[PROFILE CLICK]", {
+          memberName: memberName,
+          link: profileLink,
+        });
+        return true;
+      }
+
+      function handleFiles(files) {
+        if (files.length === 0) return;
+
+        const file = files[0];
+        if (!file.type.startsWith("image/")) {
+          showMessage("Please select a valid image file", "error");
+          return;
+        }
+
+        selectedFile = file;
+        filenameDisplay.textContent = "✓ " + file.name;
+        messageDiv.className = "message";
+        hideMessage();
+      }
+
+      function showMessage(text, type) {
+        messageDiv.textContent = text;
+        messageDiv.className = "message " + type;
+      }
+
+      function hideMessage() {
+        messageDiv.className = "message";
+      }
+
+      async function analyzeImage() {
+        if (!selectedFile) {
+          showMessage("Please select an image first", "error");
+          return;
+        }
+
+        analyzeBtn.disabled = true;
+        showMessage("Analyzing image...", "loading");
+        messageDiv.innerHTML =
+          '<span class="spinner"></span>Analyzing image...';
+
+        try {
+          // Store uploaded image name globally for display in results
+          window.uploadedImageName = selectedFile.name;
+
+          const formData = new FormData();
+          formData.append("file", selectedFile);
+
+          const response = await fetch("/api/analyze", {
+            method: "POST",
+            body: formData,
+          });
+
+          const data = await response.json();
+
+          if (!response.ok) {
+            showMessage("Error: " + data.error, "error");
+            analyzeBtn.disabled = false;
+            return;
+          }
+
+          // Display match result or no match message
+          if (data.has_match) {
+            // Use top_matches if available (multiple matches), otherwise use top_match (single match)
+            const matchesToDisplay =
+              data.top_matches && data.top_matches.length > 0
+                ? data.top_matches
+                : data.top_match
+                  ? [data.top_match]
+                  : null;
+
+            console.log("[API RESPONSE]", {
+              has_match: data.has_match,
+              top_matches_count: data.top_matches ? data.top_matches.length : 0,
+              top_match: data.top_match
+                ? {
+                    name: data.top_match.name,
+                    similarity: data.top_match.similarity_rate,
+                  }
+                : null,
+              total_members: data.total_members,
+              match_count: data.match_count,
+            });
+
+            if (matchesToDisplay) {
+              displayTopMatch(matchesToDisplay);
+              const matchCount = matchesToDisplay.length;
+              const message =
+                matchCount > 1
+                  ? `Found ${matchCount} matches! Top match: ${matchesToDisplay[0].similarity_rate}%`
+                  : `Match found! Similarity: ${matchesToDisplay[0].similarity_rate}%`;
+              showMessage(message, "success");
+              console.log(
+                `API Response - Total Members: ${data.total_members}, Return Top N: ${data.return_top_n}, Found: ${data.match_count}`,
+              );
+            } else {
+              displayNoMatch(data.detected_gender);
+              showMessage(
+                "No match found. No face in database meets the similarity threshold.",
+                "warning",
+              );
+            }
+          } else {
+            displayNoMatch(data.detected_gender);
+            showMessage(
+              "No match found. No face in database meets the similarity threshold.",
+              "warning",
+            );
+          }
+        } catch (error) {
+          showMessage("Error: " + error.message, "error");
+        } finally {
+          analyzeBtn.disabled = false;
+        }
+      }
+
+      function createMatchCard(match, index) {
+        // Validate match data
+        if (!match) {
+          console.error(`[CARD ${index + 1}] Match is null or undefined`);
+          return "";
+        }
+
+        console.log(`[CARD ${index + 1}] Match data:`, {
+          name: match.name,
+          similarity_rate: match.similarity_rate,
+          photo_url: match.photo_url,
+          profile_link: match.profile_link,
+        });
+
+        // Determine color based on similarity
+        let similarityColor = "#e74c3c"; // red
+        if (match.similarity_rate >= 80) {
+          similarityColor = "#27ae60"; // green
+        } else if (match.similarity_rate >= 65) {
+          similarityColor = "#f39c12"; // orange
+        }
+
+        // Build photo HTML
+        let photoHtml = "";
+        if (match.photo_url && match.photo_url.trim() !== "") {
+          photoHtml = `<img src="${match.photo_url}" alt="${match.name}" style="max-width: 100%; height: auto; max-height: 350px; border-radius: 12px; margin-bottom: 20px; object-fit: cover; border: 2px solid #e0e0e0;" />`;
+        } else {
+          photoHtml = `<div style="width:100%;height:280px;background:#f0f0f0;display:flex;align-items:center;justify-content:center;border-radius:12px;margin-bottom:20px;border:2px solid #ddd;color:#999;"><div>📷 No photo available</div></div>`;
+        }
+
+        // Build the card HTML
+        let cardHtml = `
+          <div style="background: white; border-radius: 12px; padding: 30px; margin-bottom: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.12); border: 1px solid #ecf0f1;">
+            ${photoHtml}
+            
+            <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; margin-bottom: 25px;">
+              <p style="font-size: 12px; color: #666; text-transform: uppercase; letter-spacing: 1px; margin: 0 0 8px 0; font-weight: 600;">Matched Profile Name</p>
+              <h3 style="color: #2c3e50; font-size: 28px; margin: 0 0 15px 0; font-weight: bold;">${match.name}</h3>
+              <div style="height: 1px; background: #ddd; margin: 15px 0;"></div>
+              <p style="font-size: 12px; color: #666; text-transform: uppercase; letter-spacing: 1px; margin: 15px 0 8px 0; font-weight: 600;">Similarity Score</p>
+              <p style="font-size: 32px; font-weight: bold; color: ${similarityColor}; margin: 0;">${match.similarity_rate}%</p>
+            </div>
+            
+            <div style="padding: 15px; background: #ecf0f1; border-radius: 8px; margin-bottom: 25px;">
+              <p style="font-size: 11px; color: #7f8c8d; text-transform: uppercase; margin: 0 0 5px 0; font-weight: 600;">Your Uploaded Image</p>
+              <p style="font-size: 13px; font-weight: bold; color: #2c3e50; margin: 0; word-break: break-word;">${window.uploadedImageName || "unknown"}</p>
+            </div>
+            
+            <a href="${match.profile_link}" target="_blank" rel="noopener noreferrer" onclick="return handleProfileClick(event, '${match.profile_link}', '${match.name}')" style="display: inline-block; padding: 14px 45px; background: linear-gradient(135deg, #3498db 0%, #2980b9 100%); color: white; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 15px; margin-top: 10px; box-shadow: 0 4px 12px rgba(52,152,219,0.3); border: none; cursor: pointer;">
+              🔗 View Full Profile
+            </a>
+          </div>
+        `;
+
+        return cardHtml;
+      }
+
+      function displayTopMatch(matches) {
+        // Hide no results message
+        noResults.classList.add("hidden");
+
+        // Show match card
+        matchCard.classList.remove("hidden");
+
+        // Handle both single match and array of matches
+        const matchArray = Array.isArray(matches) ? matches : [matches];
+
+        console.log("[DISPLAY] Displaying matches:", matchArray);
+
+        // Clear previous results
+        matchesContainer.innerHTML = "";
+
+        // Add title if multiple matches
+        if (matchArray.length > 1) {
+          const title = document.createElement("h2");
+          title.style.cssText =
+            "color: #2c3e50; font-size: 24px; margin: 0 0 30px 0; text-align: center;";
+          title.textContent = `Top ${matchArray.length} Matches Found`;
+          matchesContainer.appendChild(title);
+        }
+
+        // Create and add match cards
+        matchArray.forEach((match, index) => {
+          console.log(`[CARD ${index + 1}] Creating card for:`, match);
+          const cardHtml = createMatchCard(match, index);
+          const div = document.createElement("div");
+          div.innerHTML = cardHtml;
+          matchesContainer.appendChild(div.firstElementChild);
+          console.log(`[CARD ${index + 1}] Card added to container`);
+        });
+
+        console.log(`Displayed ${matchArray.length} match(es)`);
+      }
+
+      function displayNoMatch(detectedGender) {
+        // Hide match card and show no match message
+        matchCard.classList.add("hidden");
+        noResults.classList.remove("hidden");
+
+        const genderText = detectedGender
+          ? detectedGender.toLowerCase()
+          : "unknown";
+        noResults.innerHTML = `
+          <div style="text-align: center; padding: 60px 20px; color: #666;">
+            <div style="font-size: 48px; margin-bottom: 20px;">👤 Not Found</div>
+            <p style="font-size: 16px; font-weight: bold; margin-bottom: 15px;">No Matching Face Found</p>
+            <p style="font-size: 14px; color: #555;">
+              The uploaded face was compared against all profiles in the database but no match was found with the required similarity threshold.
+            </p>
+            <p style="font-size: 12px; color: #999; margin-top: 15px;">
+              Detected gender: <strong>${genderText}</strong>
+            </p>
+          </div>
+        `;
+      }
+    </script>
+  </body>
+</html>

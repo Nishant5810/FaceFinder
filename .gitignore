@@ -1,0 +1,88 @@
+# Environment Variables
+.env
+.env.local
+.env.*.local
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual Environments
+venv/
+.venv/
+.venv-1/
+ENV/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+face_recognition.db
+
+# Generated Files
+*.pkl
+embeddings_*.pkl
+*.pyc
+.pytest_cache/
+.coverage
+
+# Temporary Files
+uploads/
+test_*.jpg
+*.backup
+face_recognition_log.txt
+
+# Documentation
+IMPLEMENTATION_COMPLETE.md
+VERIFICATION_COMPLETE.md
+INTEGRATION_STATUS.md
+trustworthy_face_matcher.py
+validate_trustworthy_matcher.py
+verify_integration.py
+TRUSTWORTHY_MATCHER_DOCUMENTATION.md
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+face_recognition_log.txt
+
+# Cache files
+*.pkl
+*.pickle
+embeddings_*.pkl
+
+# Uploads
+uploads/
